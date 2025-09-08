@@ -48,24 +48,69 @@ int main (int argc, char** argv, char** envp) {
         |-- (repeat)
     */
 
-    // read command
-    char command[1024];
-    while (1) {
-        printf("my_zsh $> ");
-        if (!fgets(command, sizeof(command), stdin)) { // TODO: change to use getline
-            break; // EOF
-        }
-        if (command[0] == '\0') {
-            continue;
-        }
-        // Remove newline character
-        command[strcspn(command, "\n")] = 0;
-
-        // parse command
-        // execute command
+    if (argc > 1) {
+        write_error(argv[0]);
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    // Read command
+    char* input = NULL;
+    size_t input_len = 0;
+    ssize_t read_size;
+
+    while (1) {
+        write(1, "my_zsh $> ", 10);
+        read_size = getline(&input, &input_len, stdin);
+
+        // if (read_size == -1) {
+        //     break; // EOF
+        // }
+
+        // Remove newline character
+        if (input[read_size - 1] == '\n') {
+            input[read_size - 1] = '\0';
+        }
+
+        // Parse command
+        char** args = parse_input(input);
+        if (args == NULL) {
+            free(args);
+            continue;
+        }
+
+        // Execute command
+        execute_command(args, envp);
+    }
+    free(input);
+    return EXIT_SUCCESS;
+}
+
+void write_error(const char* msg) {
+    write(2, "Usage: ", 7);
+    write(2, msg, my_strlen(msg));
+    write(2, "\n", 1);
+}
+
+char** parse_input(char *input) {
+    char** args = malloc(sizeof(char*) * (MAX_INPUT_SIZE / 2 + 1));
+    if (args == NULL) {
+        perror("malloc failed");
+        return NULL;
+    }
+    char* token;
+    int position = 0;
+    token = strtok(input, " "); // TODO: change to my_strtok
+    while (token != NULL) {
+        args[position] = token;
+        position++;
+        token = strtok(NULL, " "); // TODO: change to my_strtok
+    }
+    args[position] = NULL;
+    return args;
+}
+
+void execute_command(char **args, char** envp) {
+    
 }
 
 void change_directory(char *path) {
@@ -75,7 +120,7 @@ void change_directory(char *path) {
 }
 
 void print_working_directory() {
-    char cwd[1024];
+    char cwd[MAX_INPUT_SIZE];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("%s\n", cwd);
     } else {
@@ -87,4 +132,61 @@ void set_environment_variable(char *name, char *value) {
     if (setenv(name, value, 1) != 0) {
         perror("setenv failed");
     }
+}
+
+int my_strlen(const char* str_1) {
+    int length = 0;
+
+    while (*str_1 != '\0') {
+        length++;
+        str_1++;
+    }
+
+    return length;
+}
+
+char* my_strchr(const char* str, int search_char) {
+    while (*str) { 
+        if (*str == (char)search_char) {
+            return (char*)str;
+        }
+        str++;
+    }
+    return NULL;
+}
+
+char* my_strtok(char* str, const char* delim) {
+    // If str is NULL, use the saved pointer
+    if (str == NULL) {
+        if (saved_ptr == NULL) {
+            return NULL;
+        }
+        str = saved_ptr;
+    }
+    
+    // Skip leading delimiters
+    while (*str && strchr(delim, *str)) {
+        str++;
+    }
+    
+    if (*str == '\0') {
+        saved_ptr = NULL;
+        return NULL;
+    }
+    
+    char* token_start = str;
+    
+    // Find the end of the token
+    while (*str && !my_strchr(delim, *str)) {
+        str++;
+    }
+    
+    if (*str) {
+        *str = '\0';
+        saved_ptr = str + 1;
+    } else {
+        saved_ptr = NULL;
+    }
+    
+    return token_start;
 }
