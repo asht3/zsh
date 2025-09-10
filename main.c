@@ -110,7 +110,45 @@ char** parse_input(char *input) {
 }
 
 void execute_command(char **args, char** envp) {
-    
+    if (args[0] == NULL) {
+        return; // Empty command
+    }
+
+    if (my_strcmp(args[0], "cd") == 0) {
+        if (args[1] == NULL) {
+            perror("cd: expected argument");
+        } else {
+            change_directory(args[1]);
+        }
+    } else if (my_strcmp(args[0], "pwd") == 0) {
+        print_working_directory();
+    } else if (my_strcmp(args[0], "setenv") == 0) {
+        if (args[1] == NULL || args[2] == NULL) {
+            perror("setenv: expected two arguments");
+        } else {
+            set_environment_variable(args[1], args[2]);
+        }
+    } else {
+        start_process(args, envp);
+    }
+}
+
+int start_process(char** args, char** envp) {
+    pid_t pid = fork();
+
+    if (pid == 0) { // Child process
+        if (execve(args[0], args, envp) == -1) {
+            perror("execve failed");
+        }
+        return 0;
+    } else if (pid < 0) {
+        perror("fork failed");
+        return 0;
+    } else { // Parent process
+        waitpid(pid, NULL, 0);
+    }
+
+    return 1;
 }
 
 void change_directory(char *path) {
@@ -189,4 +227,18 @@ char* my_strtok(char* str, const char* delim) {
     }
     
     return token_start;
+}
+
+int my_strcmp(const char* str_1, const char* str_2) {
+    while (*str_1 != '\0' || *str_2 != '\0') {
+        if (*str_1 < *str_2) {
+            return -1;
+        }
+        else if (*str_1 > *str_2) {
+            return 1;
+        }
+        str_1++;
+        str_2++;
+    }
+    return 0;
 }

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define MAX_INPUT_SIZE 1024
 
@@ -13,6 +15,7 @@ char* saved_ptr = NULL;
 
 char** parse_input(char *input);
 void execute_command(char **args, char** envp);
+int start_process(char** args, char** envp);
 
 // Builtins
 void change_directory(char *path);
@@ -28,5 +31,6 @@ void write_error(const char* msg);
 int my_strlen(const char* str_1);
 char* my_strchr(const char* str, int search_char);
 char* my_strtok(char* str, const char* delim);
+int my_strcmp(const char* str_1, const char* str_2);
 
 #endif
