@@ -3,12 +3,12 @@
 // 2. Parse the input into commands and arguments
 // 3. Execute the commands
     // command execution can be done using fork() and exec() system calls
-    // commands to execute: ls - cat - tail - head - pwd - env - setenv - cd
+    // commands to execute: ls - cat - tail - head - env
         // ls, cat, tail, head, env (system binary)
-        // pwd (built in)
-        // cd (built in)
-        // exit (built in)
-        // setenv (built in)
+        // [x] pwd (built in)
+        // [x] cd (built in)
+        // [x] exit (built in)
+        // [x] setenv (built in)
     // binary have to be exec in your shell, To execute a binary, the exec*() functions
         // execve()
         // create a fork() to create a child process
@@ -53,6 +53,13 @@ int main (int argc, char** argv, char** envp) {
         return EXIT_FAILURE;
     }
 
+    // printf("\n███████╗███████╗██╗  ██╗\n");
+    // printf("╚══███╔╝██╔════╝██║  ██║\n");
+    // printf("  ███╔╝ ███████╗███████║\n");
+    // printf(" ███╔╝  ╚════██║██╔══██║\n");
+    // printf("███████╗███████║██║  ██║\n");
+    // printf("╚══════╝╚══════╝╚═╝  ╚═╝\n");
+
     // Read command
     char* input = NULL;
     size_t input_len = 0;
@@ -82,7 +89,8 @@ int main (int argc, char** argv, char** envp) {
         execute_command(args, envp);
     }
     free(input);
-    return EXIT_SUCCESS;
+
+    return 0;
 }
 
 void write_error(const char* msg) {
@@ -128,6 +136,10 @@ void execute_command(char **args, char** envp) {
         } else {
             set_environment_variable(args[1], args[2]);
         }
+    } else if (my_strcmp(args[0], "env") == 0) {
+        print_environment(envp);
+    } else if (my_strcmp(args[0], "exit") == 0) {
+        exit(0);
     } else {
         start_process(args, envp);
     }
@@ -138,9 +150,9 @@ int start_process(char** args, char** envp) {
 
     if (pid == 0) { // Child process
         if (execve(args[0], args, envp) == -1) {
-            perror("execve failed");
+            // Search in path
         }
-        return 0;
+        // exit(EXIT_FAILURE);
     } else if (pid < 0) {
         perror("fork failed");
         return 0;
@@ -169,6 +181,13 @@ void print_working_directory() {
 void set_environment_variable(char *name, char *value) {
     if (setenv(name, value, 1) != 0) {
         perror("setenv failed");
+    }
+}
+
+void print_environment(char **envp) {
+    for (int i = 0; envp[i] != NULL; i++) {
+        write(1, envp[i], my_strlen(envp[i]));
+        write(1, "\n", 1);
     }
 }
 

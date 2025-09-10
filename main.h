@@ -16,15 +16,20 @@ char* saved_ptr = NULL;
 char** parse_input(char *input);
 void execute_command(char **args, char** envp);
 int start_process(char** args, char** envp);
+void get_env_var(char** envp);
 
 // Builtins
 void change_directory(char *path);
 void print_working_directory();
 void set_environment_variable(char *name, char *value);
-// TODO: exit
 
 // System binary
 // ls, cat, tail, head, env
+void list_directory();
+void concat_files(char **args);
+void display_file_head(char **args);
+void display_file_tail(char **args);
+void print_environment(char **envp);
 
 // Utilities
 void write_error(const char* msg);
