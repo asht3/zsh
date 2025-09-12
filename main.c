@@ -140,13 +140,15 @@ void execute_command(char **args, char** envp) {
         print_environment(envp);
     } else if (my_strcmp(args[0], "ls") == 0) {
         list_directory(args[1]);
-    } else if (my_strcmp(args[0], "cat") == 0) {
-        concat_files(args);
-    } else if (my_strcmp(args[0], "head") == 0) {
-        display_file_head(args);
-    } else if (my_strcmp(args[0], "tail") == 0) {
-        display_file_tail(args);
-    } else if (my_strcmp(args[0], "exit") == 0) {
+    } 
+    // else if (my_strcmp(args[0], "cat") == 0) {
+    //     concat_files(args);
+    // } else if (my_strcmp(args[0], "head") == 0) {
+    //     display_file_head(args);
+    // } else if (my_strcmp(args[0], "tail") == 0) {
+    //     display_file_tail(args);
+    // }
+     else if (my_strcmp(args[0], "exit") == 0) {
         exit(0);
     } else {
         start_process(args, envp);
@@ -213,6 +215,7 @@ void print_working_directory() {
     char cwd[MAX_INPUT_SIZE];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         write(1, cwd, my_strlen(cwd));
+        write(1, "\n", 1);
     } else {
         perror("getcwd failed");
     }
@@ -233,7 +236,7 @@ void list_directory(char* path) {
     dir = opendir(path);
     if (dir == NULL) perror("ls: failed to open directory");
 
-    while ((entry = readdir(dir) != NULL)) {
+    while ((entry = readdir(dir)) != NULL) {
         write(1, entry->d_name, my_strlen(entry->d_name));
         write(1, "\n", 1);
     }
@@ -340,7 +343,7 @@ int my_strncmp(const char *str1, const char *str2, int n) {
     return 0;
 }
 
-char* strcpy(char* dest, const char* src) {
+char* my_strcpy(char* dest, const char* src) {
     char* original_dest = dest;
     while (*src != '\0') {
         *dest = *src;

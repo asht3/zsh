@@ -40,7 +40,7 @@ char* my_strchr(const char* str, int search_char);
 char* my_strtok(char* str, const char* delim);
 int my_strcmp(const char* str_1, const char* str_2);
 int my_strncmp(const char *str1, const char *str2, int n);
-char* strcpy(char* dest, const char* src);
+char* my_strcpy(char* dest, const char* src);
 // int is_executable(const char* path);
 
 #endif
