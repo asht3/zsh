@@ -227,11 +227,12 @@ void set_environment_variable(char *name, char *value) {
     }
 }
 
+// TODO: Fix segfault
 void list_directory(char* path) {
     DIR* dir;
     struct dirent* entry;
 
-    if (path == NULL) dir = opendir(".");
+    if (path == NULL) path = ".";
 
     dir = opendir(path);
     if (dir == NULL) perror("ls: failed to open directory");

@@ -43,4 +43,4 @@ int my_strncmp(const char *str1, const char *str2, int n);
 char* my_strcpy(char* dest, const char* src);
 // int is_executable(const char* path);
 
-#endif
+#endif // MAIN_H
