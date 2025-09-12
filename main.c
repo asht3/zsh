@@ -119,7 +119,7 @@ char** parse_input(char *input) {
 
 void execute_command(char **args, char** envp) {
     if (args[0] == NULL) {
-        return; // Empty command
+        return;
     }
 
     if (my_strcmp(args[0], "cd") == 0) {
@@ -138,6 +138,14 @@ void execute_command(char **args, char** envp) {
         }
     } else if (my_strcmp(args[0], "env") == 0) {
         print_environment(envp);
+    } else if (my_strcmp(args[0], "ls") == 0) {
+        list_directory(args[1]);
+    } else if (my_strcmp(args[0], "cat") == 0) {
+        concat_files(args);
+    } else if (my_strcmp(args[0], "head") == 0) {
+        display_file_head(args);
+    } else if (my_strcmp(args[0], "tail") == 0) {
+        display_file_tail(args);
     } else if (my_strcmp(args[0], "exit") == 0) {
         exit(0);
     } else {
@@ -156,16 +164,15 @@ int start_process(char** args, char** envp) {
                 my_strcpy(path_copy, path_val);
                 // Split PATH by colons to get individual directories
                 char* dir = my_strtok(path_copy, ":");
-                // TODO: check if dir is NULL
                 while (dir) {
-                    char full_path[1024];
+                    char full_path[MAX_INPUT_SIZE];
                     my_strcpy(full_path, dir);
                     my_strcpy(full_path + my_strlen(full_path), "/");
                     my_strcpy(full_path + my_strlen(full_path), args[0]);
                     
-                    if (is_executable(full_path) == 0) {
+                    // if (is_executable(full_path) == 0) {
                         execve(full_path, args, envp);
-                    }
+                    // }
                     dir = my_strtok(NULL, ":");
                 }
                 free(path_copy);
@@ -217,8 +224,21 @@ void set_environment_variable(char *name, char *value) {
     }
 }
 
-void list_directory() {
+void list_directory(char* path) {
+    DIR* dir;
+    struct dirent* entry;
 
+    if (path == NULL) dir = opendir(".");
+
+    dir = opendir(path);
+    if (dir == NULL) perror("ls: failed to open directory");
+
+    while ((entry = readdir(dir) != NULL)) {
+        write(1, entry->d_name, my_strlen(entry->d_name));
+        write(1, "\n", 1);
+    }
+
+    closedir(dir);
 }
 
 void print_environment(char **envp) {
@@ -331,12 +351,12 @@ char* strcpy(char* dest, const char* src) {
     return original_dest;
 }
 
-int is_executable(const char* path) {
-    struct stat st;
-    if (stat(path, &st) == 0) {
-        if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
-            return 1;
-        }
-    }
-    return 0;
-}
+// int is_executable(const char* path) {
+//     struct stat st;
+//     if (stat(path, &st) == 0) {
+//         if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
+//             return 1;
+//         }
+//     }
+//     return 0;
+// }

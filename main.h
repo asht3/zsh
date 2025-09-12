@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 #define MAX_INPUT_SIZE 1024
 
@@ -26,7 +27,7 @@ void set_environment_variable(char *name, char *value);
 
 // System binary
 // ls, cat, tail, head, env
-void list_directory();
+void list_directory(char* path);
 void concat_files(char **args);
 void display_file_head(char **args);
 void display_file_tail(char **args);
@@ -40,6 +41,6 @@ char* my_strtok(char* str, const char* delim);
 int my_strcmp(const char* str_1, const char* str_2);
 int my_strncmp(const char *str1, const char *str2, int n);
 char* strcpy(char* dest, const char* src);
-int is_executable(const char* path);
+// int is_executable(const char* path);
 
 #endif
