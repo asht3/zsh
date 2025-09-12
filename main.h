@@ -16,7 +16,7 @@
 char* saved_ptr = NULL;
 
 char** parse_input(char *input);
-void execute_command(char **args, char** envp);
+int execute_command(char **args, char** envp);
 int start_process(char** args, char** envp);
 char* get_env_var(char** envp);
 

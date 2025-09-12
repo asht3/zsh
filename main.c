@@ -64,6 +64,7 @@ int main (int argc, char** argv, char** envp) {
     char* input = NULL;
     size_t input_len = 0;
     ssize_t read_size;
+    // int exit_status = 0;
 
     while (1) {
         write(1, "my_zsh $> ", 10);
@@ -86,9 +87,18 @@ int main (int argc, char** argv, char** envp) {
         }
 
         // Execute command
-        execute_command(args, envp);
+        if (execute_command(args, envp) > 0) {
+            free(args);
+            break;
+        }
+        // if ((exit_status = execute_command(args, envp)) > 0) {
+        //     free(args);
+        //     break;
+        // }
+        free(args);
     }
     free(input);
+    // if (exit_status) exit(0);
 
     return 0;
 }
@@ -100,6 +110,8 @@ void write_error(const char* msg) {
 }
 
 char** parse_input(char *input) {
+    if (input == NULL) return NULL;
+
     char** args = malloc(sizeof(char*) * (MAX_INPUT_SIZE / 2 + 1));
     if (args == NULL) {
         perror("malloc failed");
@@ -117,9 +129,9 @@ char** parse_input(char *input) {
     return args;
 }
 
-void execute_command(char **args, char** envp) {
+int execute_command(char **args, char** envp) {
     if (args[0] == NULL) {
-        return;
+        return 1;
     }
 
     if (my_strcmp(args[0], "cd") == 0) {
@@ -149,10 +161,11 @@ void execute_command(char **args, char** envp) {
     //     display_file_tail(args);
     // }
      else if (my_strcmp(args[0], "exit") == 0) {
-        exit(0);
+        return 1;
     } else {
         start_process(args, envp);
     }
+    return 0;
 }
 
 int start_process(char** args, char** envp) {
@@ -227,7 +240,6 @@ void set_environment_variable(char *name, char *value) {
     }
 }
 
-// TODO: Fix segfault
 void list_directory(char* path) {
     DIR* dir;
     struct dirent* entry;
