@@ -150,7 +150,26 @@ int start_process(char** args, char** envp) {
 
     if (pid == 0) { // Child process
         if (execve(args[0], args, envp) == -1) {
-            // Search in path
+            char* path_val = get_env_var(envp);
+            if (path_val != NULL) {
+                char* path_copy = malloc(my_strlen(path_val) + 1);
+                my_strcpy(path_copy, path_val);
+                // Split PATH by colons to get individual directories
+                char* dir = my_strtok(path_copy, ":");
+                // TODO: check if dir is NULL
+                while (dir) {
+                    char full_path[1024];
+                    my_strcpy(full_path, dir);
+                    my_strcpy(full_path + my_strlen(full_path), "/");
+                    my_strcpy(full_path + my_strlen(full_path), args[0]);
+                    
+                    if (is_executable(full_path) == 0) {
+                        execve(full_path, args, envp);
+                    }
+                    dir = my_strtok(NULL, ":");
+                }
+                free(path_copy);
+            }
         }
         // exit(EXIT_FAILURE);
     } else if (pid < 0) {
@@ -163,6 +182,20 @@ int start_process(char** args, char** envp) {
     return 1;
 }
 
+char* get_env_var(char** envp) {
+    int var_len = my_strlen("PATH");
+    for (int i = 0; envp[i] != NULL; i++) {
+        if (my_strncmp(envp[i], "PATH", var_len) == 0 && envp[i][var_len] == '=') {
+            // return envp[i] + var_len;
+            return &envp[i][var_len + 1];
+        }
+        // if (my_strcmp(envp[i], "PATH=") == 0) {
+        //     return envp[i] + var_len;
+        // }
+    }
+    return NULL;
+}
+
 void change_directory(char *path) {
     if (chdir(path) != 0) {
         perror("cd failed");
@@ -172,7 +205,7 @@ void change_directory(char *path) {
 void print_working_directory() {
     char cwd[MAX_INPUT_SIZE];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("%s\n", cwd);
+        write(1, cwd, my_strlen(cwd));
     } else {
         perror("getcwd failed");
     }
@@ -182,6 +215,10 @@ void set_environment_variable(char *name, char *value) {
     if (setenv(name, value, 1) != 0) {
         perror("setenv failed");
     }
+}
+
+void list_directory() {
+
 }
 
 void print_environment(char **envp) {
@@ -213,7 +250,7 @@ char* my_strchr(const char* str, int search_char) {
 }
 
 char* my_strtok(char* str, const char* delim) {
-    // If str is NULL, use the saved pointer
+    static char* saved_ptr = NULL;
     if (str == NULL) {
         if (saved_ptr == NULL) {
             return NULL;
@@ -222,7 +259,7 @@ char* my_strtok(char* str, const char* delim) {
     }
     
     // Skip leading delimiters
-    while (*str && strchr(delim, *str)) {
+    while (*str && my_strchr(delim, *str)) {
         str++;
     }
     
@@ -258,6 +295,48 @@ int my_strcmp(const char* str_1, const char* str_2) {
         }
         str_1++;
         str_2++;
+    }
+    return 0;
+}
+
+int my_strncmp(const char *str1, const char *str2, int n) {
+    for (int i = 0; i < n; i++) {
+        if (str1[i] == '\0' && str2[i] == '\0') {
+            return 0;
+        }
+        if (str1[i] == '\0') {
+            return -1;
+        }
+        if (str2[i] == '\0') {
+            return 1;
+        }
+        if (str1[i] < str2[i]) {
+            return -1;
+        }
+        if (str1[i] > str2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+char* strcpy(char* dest, const char* src) {
+    char* original_dest = dest;
+    while (*src != '\0') {
+        *dest = *src;
+        dest++;
+        src++;
+    }
+    *dest = '\0';
+    return original_dest;
+}
+
+int is_executable(const char* path) {
+    struct stat st;
+    if (stat(path, &st) == 0) {
+        if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
+            return 1;
+        }
     }
     return 0;
 }
