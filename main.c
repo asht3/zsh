@@ -294,6 +294,46 @@ void display_file_head(char **args) {
     close(file_fd);
 }
 
+void display_file_tail(char **args) {
+    if (args[1] == NULL) {
+        write(STDERR_FILENO, "tail: expected argument\n", 24);
+        return;
+    }
+
+    int file_fd = open(args[1], O_RDONLY);
+    if (file_fd < 0) {
+        perror("tail: failed to open file");
+        return;
+    }
+
+    char buffer[MAX_INPUT_SIZE];
+    size_t bytes_read;
+    int line_count = 0;
+    while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
+        for (size_t i = 0; i < bytes_read; i++) {
+            if (buffer[i] == '\n') {
+                line_count++;
+            }
+        }
+    }
+    close(file_fd);
+    file_fd = open(args[1], O_RDONLY);
+
+    int skip_lines = line_count > 10 ? line_count - 10 : 0;
+    line_count = 0;
+    while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
+        for (size_t i = 0; i < bytes_read; i++) {
+            if (buffer[i] == '\n') {
+                line_count++;
+            }
+            if (line_count > skip_lines) {
+                write(STDOUT_FILENO, &buffer[i], 1);
+            }
+        }
+    }
+    close(file_fd);    
+}
+
 void print_environment(char **envp) {
     for (int i = 0; envp[i] != NULL; i++) {
         write(STDOUT_FILENO, envp[i], my_strlen(envp[i]));
