@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <fcntl.h>
 
 #define MAX_INPUT_SIZE 1024
 

@@ -41,13 +41,6 @@ Requirements:
 #include "main.h"
 
 int main (int argc, char** argv, char** envp) {
-    /*
-        |  Read: Read the command from standard input.
-        |  Parse: Separate the command string into a program and arguments.
-        |  Execute: Run the parsed command.
-        |-- (repeat)
-    */
-
     if (argc > 1) {
         write_error(argv[0]);
         return EXIT_FAILURE;
@@ -64,10 +57,11 @@ int main (int argc, char** argv, char** envp) {
     char* input = NULL;
     size_t input_len = 0;
     ssize_t read_size;
-    // int exit_status = 0;
 
     while (1) {
-        write(1, "my_zsh $> ", 10);
+        if (isatty(STDIN_FILENO)) {
+            write(STDOUT_FILENO, "my_zsh $> ", 10);
+        }
         read_size = getline(&input, &input_len, stdin);
 
         // if (read_size == -1) {
@@ -91,22 +85,17 @@ int main (int argc, char** argv, char** envp) {
             free(args);
             break;
         }
-        // if ((exit_status = execute_command(args, envp)) > 0) {
-        //     free(args);
-        //     break;
-        // }
         free(args);
     }
     free(input);
-    // if (exit_status) exit(0);
 
     return 0;
 }
 
 void write_error(const char* msg) {
-    write(2, "Usage: ", 7);
-    write(2, msg, my_strlen(msg));
-    write(2, "\n", 1);
+    write(STDERR_FILENO, "Usage: ", 7);
+    write(STDERR_FILENO, msg, my_strlen(msg));
+    write(STDERR_FILENO, "\n", 1);
 }
 
 char** parse_input(char *input) {
@@ -119,11 +108,11 @@ char** parse_input(char *input) {
     }
     char* token;
     int position = 0;
-    token = strtok(input, " "); // TODO: change to my_strtok
+    token = my_strtok(input, " "); // TODO: change to my_strtok
     while (token != NULL) {
         args[position] = token;
         position++;
-        token = strtok(NULL, " "); // TODO: change to my_strtok
+        token = my_strtok(NULL, " "); // TODO: change to my_strtok
     }
     args[position] = NULL;
     return args;
@@ -227,8 +216,8 @@ void change_directory(char *path) {
 void print_working_directory() {
     char cwd[MAX_INPUT_SIZE];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        write(1, cwd, my_strlen(cwd));
-        write(1, "\n", 1);
+        write(STDOUT_FILENO, cwd, my_strlen(cwd));
+        write(STDOUT_FILENO, "\n", 1);
     } else {
         perror("getcwd failed");
     }
@@ -250,17 +239,43 @@ void list_directory(char* path) {
     if (dir == NULL) perror("ls: failed to open directory");
 
     while ((entry = readdir(dir)) != NULL) {
-        write(1, entry->d_name, my_strlen(entry->d_name));
-        write(1, "\n", 1);
+        write(STDOUT_FILENO, entry->d_name, my_strlen(entry->d_name));
+        write(STDOUT_FILENO, "\n", 1);
     }
 
     closedir(dir);
 }
 
+void concat_files(char **args) {
+    if (args[1] == NULL) {
+        perror("cat: expected argument");
+        return;
+    }
+
+    // loop thorugh args and open each file
+        // write each file to stdout
+        // if '>' is found, write to the output file instead
+            // search for > first, then open the file after it
+            // go back to previous files, open them, then write into the file
+    for (int i = 1; args[i] != NULL; i++) {
+        int file_fd = open(args[i], O_RDONLY);
+        if (file_fd < 0) {
+            perror("cat: failed to open file");
+            continue;
+        }
+
+        char buffer[MAX_INPUT_SIZE];
+        ssize_t bytes_read;
+        while ((bytes_read = read(file_fd, buffer, sizeof(buffer))) > 0) {
+            write(STDOUT_FILENO, buffer, bytes_read);
+        }
+    }
+}
+
 void print_environment(char **envp) {
     for (int i = 0; envp[i] != NULL; i++) {
-        write(1, envp[i], my_strlen(envp[i]));
-        write(1, "\n", 1);
+        write(STDOUT_FILENO, envp[i], my_strlen(envp[i]));
+        write(STDOUT_FILENO, "\n", 1);
     }
 }
 
