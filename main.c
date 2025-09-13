@@ -16,7 +16,6 @@
         // PATH is a colon-separated list of directories that the shell searches for executable files
         // use getenv("PATH") to get the PATH variable
         // use strtok() to split the PATH variable into individual directories
-        // use access() to check if the binary exists in the directory
 /*
 you will either check the PATH for a particular executable and forking the child process or builtin.
 Here is an earlier message: make sure you code `pwd`, `cd`, `setenv`, `unsetenv` and `env` and other shell builtins 
@@ -125,28 +124,26 @@ int execute_command(char **args, char** envp) {
 
     if (my_strcmp(args[0], "cd") == 0) {
         if (args[1] == NULL) {
-            perror("cd: expected argument");
-        } else {
-            change_directory(args[1]);
-        }
+            write(STDERR_FILENO, "cd: expected argument\n", 22);
+            return 0;
+        } else change_directory(args[1]);
     } else if (my_strcmp(args[0], "pwd") == 0) {
         print_working_directory();
     } else if (my_strcmp(args[0], "setenv") == 0) {
         if (args[1] == NULL || args[2] == NULL) {
-            perror("setenv: expected two arguments");
-        } else {
-            set_environment_variable(args[1], args[2]);
-        }
+            write(STDERR_FILENO, "setenv: expected two arguments\n", 32);
+            return 0;
+        } else set_environment_variable(args[1], args[2]);
     } else if (my_strcmp(args[0], "env") == 0) {
         print_environment(envp);
     } else if (my_strcmp(args[0], "ls") == 0) {
         list_directory(args[1]);
+    } else if (my_strcmp(args[0], "cat") == 0) {
+        concat_files(args);
+    } else if (my_strcmp(args[0], "head") == 0) {
+        display_file_head(args);
     } 
-    // else if (my_strcmp(args[0], "cat") == 0) {
-    //     concat_files(args);
-    // } else if (my_strcmp(args[0], "head") == 0) {
-    //     display_file_head(args);
-    // } else if (my_strcmp(args[0], "tail") == 0) {
+    // else if (my_strcmp(args[0], "tail") == 0) {
     //     display_file_tail(args);
     // }
      else if (my_strcmp(args[0], "exit") == 0) {
@@ -174,15 +171,12 @@ int start_process(char** args, char** envp) {
                     my_strcpy(full_path + my_strlen(full_path), "/");
                     my_strcpy(full_path + my_strlen(full_path), args[0]);
                     
-                    // if (is_executable(full_path) == 0) {
-                        execve(full_path, args, envp);
-                    // }
+                    execve(full_path, args, envp);
                     dir = my_strtok(NULL, ":");
                 }
                 free(path_copy);
             }
         }
-        // exit(EXIT_FAILURE);
     } else if (pid < 0) {
         perror("fork failed");
         return 0;
@@ -248,13 +242,14 @@ void list_directory(char* path) {
 
 void concat_files(char **args) {
     if (args[1] == NULL) {
-        perror("cat: expected argument");
+        // perror("cat: expected argument");
+        write(STDERR_FILENO, "cat: expected argument\n", 22);
         return;
     }
 
     // loop thorugh args and open each file
         // write each file to stdout
-        // if '>' is found, write to the output file instead
+        // if '>' is found, write to the output file instead (extra)
             // search for > first, then open the file after it
             // go back to previous files, open them, then write into the file
     for (int i = 1; args[i] != NULL; i++) {
@@ -269,7 +264,34 @@ void concat_files(char **args) {
         while ((bytes_read = read(file_fd, buffer, sizeof(buffer))) > 0) {
             write(STDOUT_FILENO, buffer, bytes_read);
         }
+        close(file_fd);
     }
+}
+
+void display_file_head(char **args) {
+    if (args[1] == NULL) {
+        write(STDERR_FILENO, "head: expected argument\n", 24);
+        return;
+    }
+
+    int file_fd = open(args[1], O_RDONLY);
+    if (file_fd < 0) {
+        perror("head: failed to open file");
+        return;
+    }
+
+    char char_buf;
+    ssize_t bytes_read;
+    int line_count = 0;
+    while ((bytes_read = read(file_fd, &char_buf, 1)) > 0) {
+        write(STDOUT_FILENO, &char_buf, bytes_read);
+        if (char_buf == '\n') {
+            line_count++;
+        }
+        if (line_count == 10) break;
+    }
+
+    close(file_fd);
 }
 
 void print_environment(char **envp) {
@@ -381,13 +403,3 @@ char* my_strcpy(char* dest, const char* src) {
     *dest = '\0';
     return original_dest;
 }
-
-// int is_executable(const char* path) {
-//     struct stat st;
-//     if (stat(path, &st) == 0) {
-//         if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
-//             return 1;
-//         }
-//     }
-//     return 0;
-// }

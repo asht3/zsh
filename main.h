@@ -16,6 +16,7 @@
 // Global variable
 char* saved_ptr = NULL;
 
+// Main functions
 char** parse_input(char *input);
 int execute_command(char **args, char** envp);
 int start_process(char** args, char** envp);
@@ -26,8 +27,6 @@ void change_directory(char *path);
 void print_working_directory();
 void set_environment_variable(char *name, char *value);
 
-// System binary
-// ls, cat, tail, head, env
 void list_directory(char* path);
 void concat_files(char **args);
 void display_file_head(char **args);
@@ -42,6 +41,5 @@ char* my_strtok(char* str, const char* delim);
 int my_strcmp(const char* str_1, const char* str_2);
 int my_strncmp(const char *str1, const char *str2, int n);
 char* my_strcpy(char* dest, const char* src);
-// int is_executable(const char* path);
 
 #endif // MAIN_H
