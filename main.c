@@ -6,7 +6,6 @@ int main (int argc, char** argv, char** envp) {
         return EXIT_FAILURE;
     }
 
-    // Read command
     char* input = NULL;
     size_t input_len = 0;
     ssize_t read_size;
@@ -92,6 +91,15 @@ int execute_command(char **args, char** envp) {
     }
      else if (my_strcmp(args[0], "exit") == 0) {
         return 1;
+    } else if (my_strcmp(args[0], "unsetenv") == 0) {
+        if (args[1] == NULL) {
+            write(STDERR_FILENO, "unsetenv: expected argument\n", 26);
+            return 0;
+        } else unset_environment_variable(args[1]);
+    } else if (my_strcmp(args[0], "echo") == 0) {
+        print_echo(args);
+    } else if (my_strcmp(args[0], "which") == 0) {
+        which(args);
     } else {
         start_process(args, envp);
     }
@@ -135,12 +143,8 @@ char* get_env_var(char** envp) {
     int var_len = my_strlen("PATH");
     for (int i = 0; envp[i] != NULL; i++) {
         if (my_strncmp(envp[i], "PATH", var_len) == 0 && envp[i][var_len] == '=') {
-            // return envp[i] + var_len;
             return &envp[i][var_len + 1];
         }
-        // if (my_strcmp(envp[i], "PATH=") == 0) {
-        //     return envp[i] + var_len;
-        // }
     }
     return NULL;
 }
@@ -164,14 +168,84 @@ void print_working_directory() {
 void set_environment_variable(char *name, char *value) {
     if (setenv(name, value, 1) != 0) {
         perror("setenv failed");
+    }
+}
+
+void unset_environment_variable(char *name) {
+    if (unsetenv(name) != 0) {
+        perror("unsetenv failed");
     } else {
-        // Debug output
-        write(STDOUT_FILENO, "Variable set successfully: ", 26);
+        write(STDOUT_FILENO, "Variable unset successfully: ", 28);
         write(STDOUT_FILENO, name, my_strlen(name));
-        write(STDOUT_FILENO, "=", 1);
-        write(STDOUT_FILENO, value, my_strlen(value));
         write(STDOUT_FILENO, "\n", 1);
     }
+}
+
+void print_echo(char **args) {
+    for (int i = 1; args[i] != NULL; i++) {
+        write(STDOUT_FILENO, args[i], my_strlen(args[i]));
+        if (args[i + 1] != NULL) {
+            write(STDOUT_FILENO, " ", 1);
+        }
+    }
+    write(STDOUT_FILENO, "\n", 1);
+}
+
+int which(char **args) {
+    if (args[1] == NULL) {
+        write(STDERR_FILENO, "which: expected argument\n", 24);
+        return -1;
+    }
+
+    char *command = args[1];
+    // Check if absolute path exists and is executable
+    struct stat st;
+    if (stat(command, &st) == 0) {
+        if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
+            write(STDOUT_FILENO, command, my_strlen(command));
+            write(STDOUT_FILENO, "\n", 1);
+            return 0;
+        }
+    }
+    
+    // Search in PATH
+    extern char **environ;
+    char *path_value = NULL;
+    
+    for (char **env = environ; *env != NULL; env++) {
+        if (my_strncmp(*env, "PATH=", 5) == 0) {
+            path_value = *env + 5;
+            break;
+        }
+    }
+    
+    if (path_value != NULL) {
+        char *path_copy = malloc(my_strlen(path_value) + 1);
+        my_strcpy(path_copy, path_value);
+        
+        char *dir = my_strtok(path_copy, ":");
+        while (dir != NULL) {
+            char full_path[1024];
+            my_strcpy(full_path, dir);
+            my_strcpy(full_path + my_strlen(full_path), "/");
+            my_strcpy(full_path + my_strlen(full_path), command);
+            
+            if (stat(full_path, &st) == 0) {
+                if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
+                    write(STDOUT_FILENO, full_path, my_strlen(full_path));
+                    write(STDOUT_FILENO, "\n", 1);
+                    free(path_copy);
+                    return 0;
+                }
+            }
+            dir = my_strtok(NULL, ":");
+        }
+        free(path_copy);
+    }
+    
+    write(STDERR_FILENO, command, my_strlen(command));
+    write(STDERR_FILENO, ": not found\n", 12);
+    return 1;
 }
 
 void list_directory(char* path) {
@@ -198,11 +272,6 @@ void concat_files(char **args) {
         return;
     }
 
-    // loop thorugh args and open each file
-        // write each file to stdout
-        // if '>' is found, write to the output file instead (extra)
-            // search for > first, then open the file after it
-            // go back to previous files, open them, then write into the file
     for (int i = 1; args[i] != NULL; i++) {
         int file_fd = open(args[i], O_RDONLY);
         if (file_fd < 0) {

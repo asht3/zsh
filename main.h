@@ -26,6 +26,9 @@ char* get_env_var(char** envp);
 void change_directory(char *path);
 void print_working_directory();
 void set_environment_variable(char *name, char *value);
+void unset_environment_variable(char *name);
+void print_echo(char **args);
+int which(char **args);
 
 void list_directory(char* path);
 void concat_files(char **args);
