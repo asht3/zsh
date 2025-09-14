@@ -142,10 +142,9 @@ int execute_command(char **args, char** envp) {
         concat_files(args);
     } else if (my_strcmp(args[0], "head") == 0) {
         display_file_head(args);
-    } 
-    // else if (my_strcmp(args[0], "tail") == 0) {
-    //     display_file_tail(args);
-    // }
+    } else if (my_strcmp(args[0], "tail") == 0) {
+        display_file_tail(args);
+    }
      else if (my_strcmp(args[0], "exit") == 0) {
         return 1;
     } else {
@@ -306,31 +305,69 @@ void display_file_tail(char **args) {
         return;
     }
 
-    char buffer[MAX_INPUT_SIZE];
-    size_t bytes_read;
-    int line_count = 0;
-    while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
-        for (size_t i = 0; i < bytes_read; i++) {
-            if (buffer[i] == '\n') {
-                line_count++;
-            }
-        }
+    // char buffer[MAX_INPUT_SIZE];
+    // size_t bytes_read;
+    // int line_count = 0;
+    // while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
+    //     for (size_t i = 0; i < bytes_read; i++) {
+    //         if (buffer[i] == '\n' || buffer[i] == '\0') {
+    //             line_count++;
+    //         }
+    //     }
+    // }
+    char ch;
+    int total_lines = 0;
+    int last_char = 0;
+    
+    while (read(file_fd, &ch, 1) > 0) {
+        last_char = ch;
+        if (ch == '\n') total_lines++;
+    }
+    
+    // File does not end with a newline, count the last line
+    if (last_char != '\n' && last_char != 0) {
+        total_lines++;
     }
     close(file_fd);
-    file_fd = open(args[1], O_RDONLY);
 
-    int skip_lines = line_count > 10 ? line_count - 10 : 0;
-    line_count = 0;
-    while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
-        for (size_t i = 0; i < bytes_read; i++) {
-            if (buffer[i] == '\n') {
-                line_count++;
-            }
-            if (line_count > skip_lines) {
-                write(STDOUT_FILENO, &buffer[i], 1);
-            }
+    file_fd = open(args[1], O_RDONLY);
+    int lines_to_skip = (total_lines > 10) ? total_lines - 10 : 0;
+    int current_line = 0;
+    int output_started = (lines_to_skip == 0) ? 1 : 0;
+
+    while (read(file_fd, &ch, 1) > 0) {
+        if (output_started) {
+            write(STDOUT_FILENO, &ch, 1);
+        }
+        if (ch == '\n') {
+            current_line++;
+        }
+        if (current_line == lines_to_skip) {
+            output_started = 1;
         }
     }
+
+    // int skip_lines = line_count > 9 ? line_count - 9 : 0;
+    // char char_buf;
+    // line_count = 0;
+    // while (read(file_fd, &char_buf, 1) > 0) {
+    //     if (char_buf == '\n') {
+    //         line_count++;
+    //     }
+    //     if (line_count > skip_lines) {
+    //         write(STDOUT_FILENO, &char_buf, 1);
+    //     }
+    // }
+    // while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
+    //     for (size_t i = 0; i < bytes_read; i++) {
+    //         if (buffer[i] == '\n') {
+    //             line_count++;
+    //         }
+    //         if (line_count > skip_lines) {
+    //             write(STDOUT_FILENO, &buffer[i], 1);
+    //         }
+    //     }
+    // }
     close(file_fd);    
 }
 
