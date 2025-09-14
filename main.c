@@ -1,42 +1,3 @@
-// steps to create a shell
-// 1. Read input from the user
-// 2. Parse the input into commands and arguments
-// 3. Execute the commands
-    // command execution can be done using fork() and exec() system calls
-    // commands to execute: ls - cat - tail - head - env
-        // ls, cat, tail, head, env (system binary)
-        // [x] pwd (built in)
-        // [x] cd (built in)
-        // [x] exit (built in)
-        // [x] setenv (built in)
-    // binary have to be exec in your shell, To execute a binary, the exec*() functions
-        // execve()
-        // create a fork() to create a child process
-    // To find the different binary, use the PATH environment variable
-        // PATH is a colon-separated list of directories that the shell searches for executable files
-        // use getenv("PATH") to get the PATH variable
-        // use strtok() to split the PATH variable into individual directories
-/*
-you will either check the PATH for a particular executable and forking the child process or builtin.
-Here is an earlier message: make sure you code `pwd`, `cd`, `setenv`, `unsetenv` and `env` and other shell builtins 
-you think it would be cool to implement, without deviating too much of the end goal of the project. Rest of it, run 
-the one within the system, with `exec` family functions
-
-Authorized functions:
-    malloc, free, exit, opendir, readdir, closedir, getcwd, chdir
-    fork, stat, lstat, fstat, open, close, getline
-    read, write, execve, isatty, wait, waitpid
-    wait3, wait4, signal, kill, getpid, strerror, perror.
-
-Requirements:
-    Your code must be compiled with the flags -Wall -Wextra -Werror.
-    No memory leaks are allowed.
-    Parser can be a split on spaces.
-    Multiline macros are forbidden
-    Include another .c is forbidden
-    Macros with logic (while/if/variables/...) are forbidden
-*/
-
 #include "main.h"
 
 int main (int argc, char** argv, char** envp) {
@@ -44,13 +5,6 @@ int main (int argc, char** argv, char** envp) {
         write_error(argv[0]);
         return EXIT_FAILURE;
     }
-
-    // printf("\n███████╗███████╗██╗  ██╗\n");
-    // printf("╚══███╔╝██╔════╝██║  ██║\n");
-    // printf("  ███╔╝ ███████╗███████║\n");
-    // printf(" ███╔╝  ╚════██║██╔══██║\n");
-    // printf("███████╗███████║██║  ██║\n");
-    // printf("╚══════╝╚══════╝╚═╝  ╚═╝\n");
 
     // Read command
     char* input = NULL;
@@ -62,10 +16,6 @@ int main (int argc, char** argv, char** envp) {
             write(STDOUT_FILENO, "my_zsh $> ", 10);
         }
         read_size = getline(&input, &input_len, stdin);
-
-        // if (read_size == -1) {
-        //     break; // EOF
-        // }
 
         // Remove newline character
         if (input[read_size - 1] == '\n') {
@@ -91,12 +41,6 @@ int main (int argc, char** argv, char** envp) {
     return 0;
 }
 
-void write_error(const char* msg) {
-    write(STDERR_FILENO, "Usage: ", 7);
-    write(STDERR_FILENO, msg, my_strlen(msg));
-    write(STDERR_FILENO, "\n", 1);
-}
-
 char** parse_input(char *input) {
     if (input == NULL) return NULL;
 
@@ -107,11 +51,11 @@ char** parse_input(char *input) {
     }
     char* token;
     int position = 0;
-    token = my_strtok(input, " "); // TODO: change to my_strtok
+    token = my_strtok(input, " ");
     while (token != NULL) {
         args[position] = token;
         position++;
-        token = my_strtok(NULL, " "); // TODO: change to my_strtok
+        token = my_strtok(NULL, " ");
     }
     args[position] = NULL;
     return args;
@@ -135,7 +79,8 @@ int execute_command(char **args, char** envp) {
             return 0;
         } else set_environment_variable(args[1], args[2]);
     } else if (my_strcmp(args[0], "env") == 0) {
-        print_environment(envp);
+        print_environment();
+
     } else if (my_strcmp(args[0], "ls") == 0) {
         list_directory(args[1]);
     } else if (my_strcmp(args[0], "cat") == 0) {
@@ -219,6 +164,13 @@ void print_working_directory() {
 void set_environment_variable(char *name, char *value) {
     if (setenv(name, value, 1) != 0) {
         perror("setenv failed");
+    } else {
+        // Debug output
+        write(STDOUT_FILENO, "Variable set successfully: ", 26);
+        write(STDOUT_FILENO, name, my_strlen(name));
+        write(STDOUT_FILENO, "=", 1);
+        write(STDOUT_FILENO, value, my_strlen(value));
+        write(STDOUT_FILENO, "\n", 1);
     }
 }
 
@@ -305,16 +257,6 @@ void display_file_tail(char **args) {
         return;
     }
 
-    // char buffer[MAX_INPUT_SIZE];
-    // size_t bytes_read;
-    // int line_count = 0;
-    // while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
-    //     for (size_t i = 0; i < bytes_read; i++) {
-    //         if (buffer[i] == '\n' || buffer[i] == '\0') {
-    //             line_count++;
-    //         }
-    //     }
-    // }
     char ch;
     int total_lines = 0;
     int last_char = 0;
@@ -346,36 +288,22 @@ void display_file_tail(char **args) {
             output_started = 1;
         }
     }
-
-    // int skip_lines = line_count > 9 ? line_count - 9 : 0;
-    // char char_buf;
-    // line_count = 0;
-    // while (read(file_fd, &char_buf, 1) > 0) {
-    //     if (char_buf == '\n') {
-    //         line_count++;
-    //     }
-    //     if (line_count > skip_lines) {
-    //         write(STDOUT_FILENO, &char_buf, 1);
-    //     }
-    // }
-    // while ((bytes_read = read(file_fd, buffer, sizeof(buffer)))> 0) {
-    //     for (size_t i = 0; i < bytes_read; i++) {
-    //         if (buffer[i] == '\n') {
-    //             line_count++;
-    //         }
-    //         if (line_count > skip_lines) {
-    //             write(STDOUT_FILENO, &buffer[i], 1);
-    //         }
-    //     }
-    // }
     close(file_fd);    
 }
 
-void print_environment(char **envp) {
-    for (int i = 0; envp[i] != NULL; i++) {
-        write(STDOUT_FILENO, envp[i], my_strlen(envp[i]));
+void print_environment() {
+    extern char **environ;
+    
+    for (char **env = environ; *env != NULL; env++) {
+        write(STDOUT_FILENO, *env, my_strlen(*env));
         write(STDOUT_FILENO, "\n", 1);
     }
+}
+
+void write_error(const char* msg) {
+    write(STDERR_FILENO, "Usage: ", 7);
+    write(STDERR_FILENO, msg, my_strlen(msg));
+    write(STDERR_FILENO, "\n", 1);
 }
 
 int my_strlen(const char* str_1) {

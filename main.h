@@ -31,7 +31,7 @@ void list_directory(char* path);
 void concat_files(char **args);
 void display_file_head(char **args);
 void display_file_tail(char **args);
-void print_environment(char **envp);
+void print_environment();
 
 // Utilities
 void write_error(const char* msg);
