@@ -174,10 +174,6 @@ void set_environment_variable(char *name, char *value) {
 void unset_environment_variable(char *name) {
     if (unsetenv(name) != 0) {
         perror("unsetenv failed");
-    } else {
-        write(STDOUT_FILENO, "Variable unset successfully: ", 28);
-        write(STDOUT_FILENO, name, my_strlen(name));
-        write(STDOUT_FILENO, "\n", 1);
     }
 }
 
