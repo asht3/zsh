@@ -1,3 +1,6 @@
+# Directories
 test/
+obj/
 
+# Executable
 my_zsh
