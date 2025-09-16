@@ -16,6 +16,10 @@ int main (int argc, char** argv, char** envp) {
         }
         read_size = getline(&input, &input_len, stdin);
 
+        if (read_size == -1) {
+            break;
+        }
+
         // Remove newline character
         if (input[read_size - 1] == '\n') {
             input[read_size - 1] = '\0';
@@ -23,15 +27,16 @@ int main (int argc, char** argv, char** envp) {
 
         // Parse command
         char** args = parse_input(input);
-        if (args == NULL) {
-            free(args);
-            continue;
-        }
+        // if (args == NULL) {
+        //     free(args);
+        //     continue;
+        // }
 
         // Execute command
         if (execute_command(args, envp) > 0) {
             free(args);
-            break;
+            free(input);
+            exit(0);
         }
         free(args);
     }
