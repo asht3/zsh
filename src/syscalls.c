@@ -2,26 +2,125 @@
 #include "../include/utils.h"
 #include "../include/builtins.h"
 
-void list_directory(char* path) {
+void list_directory(char** args) {
     DIR* dir;
     struct dirent* entry;
 
-    if (path == NULL) path = ".";
+    int a_flag = 0;
+    int l_flag = 0;
+    int t_flag = 0;
+    char* target_path = ".";
 
-    dir = opendir(path);
-    if (dir == NULL) perror("ls: failed to open directory");
-
-    while ((entry = readdir(dir)) != NULL) {
-        write(STDOUT_FILENO, entry->d_name, my_strlen(entry->d_name));
-        write(STDOUT_FILENO, "\n", 1);
+    for (int i = 1; args[i] != NULL; i++) {
+        if (args[i][0] == '-') {
+            if (my_strchr(args[i], 'a') != NULL) a_flag = 1;
+            if (my_strchr(args[i], 'l') != NULL) l_flag = 1;
+            if (my_strchr(args[i], 't') != NULL) t_flag = 1;
+        } else target_path = args[i];
     }
 
+
+    dir = opendir(target_path);
+    if (dir == NULL) perror("ls: failed to open directory");
+
+    char* entries[MAX_INPUT_SIZE];
+    int count = 0;
+    char full_path[MAX_INPUT_SIZE];
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (!a_flag && entry->d_name[0] == '.') {
+            continue;
+        }
+
+        // Store full path for stat operations
+        my_strcpy(full_path, target_path);
+        if (target_path[my_strlen(target_path) - 1] != '/') {
+            my_strcpy(full_path + my_strlen(full_path), "/");
+        }
+        my_strcpy(full_path + my_strlen(full_path), entry->d_name);
+        
+        entries[count] = malloc(my_strlen(full_path) + 1);
+        my_strcpy(entries[count], full_path);
+        count++;
+    }
+    entries[count] = NULL;
     closedir(dir);
+
+    // Sort entries
+    if (t_flag) {
+        quicksort((void**)entries, 0, count - 1, compare_mod_times);
+    } else {
+        quicksort((void**)entries, 0, count - 1, compare_alphabet);
+    }
+
+    display_entries(entries, count, l_flag);
+    if (!l_flag) write(STDOUT_FILENO, "\n", 1);
+}
+
+void display_entries(char** entries, int count, int l_flag) {
+    for (int i = 0; i < count; i++) {
+        char *filename = entries[i];
+        // Extract just the filename from the full path
+        char *last_slash = my_strchr(filename, '/');
+        char *display_name = last_slash ? last_slash + 1 : filename;
+        
+        if (l_flag) {
+            struct stat st;
+            if (stat(filename, &st) == 0) {
+                print_long_format(display_name, &st);
+            }
+        } else {
+            write(STDOUT_FILENO, display_name, my_strlen(display_name));
+            write(STDOUT_FILENO, "  ", 2);
+        }
+        
+        free(entries[i]);
+    }
+}
+
+void print_long_format(const char *filename, struct stat *st) {
+    char buffer[512];
+    int pos = 0;
+    
+    // File type and permissions
+    buffer[pos++] = S_ISDIR(st->st_mode) ? 'd' : '-';
+    buffer[pos++] = (st->st_mode & S_IRUSR) ? 'r' : '-';
+    buffer[pos++] = (st->st_mode & S_IWUSR) ? 'w' : '-';
+    buffer[pos++] = (st->st_mode & S_IXUSR) ? 'x' : '-';
+    buffer[pos++] = (st->st_mode & S_IRGRP) ? 'r' : '-';
+    buffer[pos++] = (st->st_mode & S_IWGRP) ? 'w' : '-';
+    buffer[pos++] = (st->st_mode & S_IXGRP) ? 'x' : '-';
+    buffer[pos++] = (st->st_mode & S_IROTH) ? 'r' : '-';
+    buffer[pos++] = (st->st_mode & S_IWOTH) ? 'w' : '-';
+    buffer[pos++] = (st->st_mode & S_IXOTH) ? 'x' : '-';
+    buffer[pos++] = ' ';
+    
+    // Number of links
+    pos += num_to_str(&buffer[pos], st->st_nlink);
+    buffer[pos++] = ' ';
+    
+    // User ID (numeric)
+    pos += num_to_str(&buffer[pos], st->st_uid);
+    buffer[pos++] = ' ';
+    
+    // Group ID (numeric)  
+    pos += num_to_str(&buffer[pos], st->st_gid);
+    buffer[pos++] = ' ';
+    
+    // File size
+    pos += num_to_str(&buffer[pos], st->st_size);
+    buffer[pos++] = ' ';
+    
+    // Filename
+    my_strcpy(&buffer[pos], filename);
+    pos += my_strlen(filename);
+    buffer[pos++] = '\n';
+    
+    write(STDOUT_FILENO, buffer, pos);
 }
 
 void concat_files(char **args) {
     if (args[1] == NULL) {
-        // perror("cat: expected argument");
         write(STDERR_FILENO, "cat: expected argument\n", 22);
         return;
     }
