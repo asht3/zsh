@@ -9,6 +9,22 @@ It should be able to support the following commands:  ls, cat, tail, head, env, 
 ## Description
 The standard input was read using `getline()` and essential shell built-ins were implemented. Then `fork()` and `execve()` were used to create child processes for external commands.
 
+Below is the current list of supported commands and flags:
+- ls
+    - flags: -l, -a, -t
+- cat
+- tail
+- head
+- env
+- echo
+- cd
+- setenv
+- unsetenv
+- env
+- pwd
+- which
+- exit
+
 ## Installation
 Users can compile the program using the provided Makefile. Once the repository is cloned, navigate to the project directory and run the following command:
 ```
@@ -37,6 +53,12 @@ my_zsh $> cd /tmp
 ```
 ```
 my_zsh $> cat file.txt
+```
+```
+my_zsh $> head file
+```
+```
+my_zsh $> tail file
 ```
 ```
 my_zsh $> exit
