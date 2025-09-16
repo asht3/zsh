@@ -7,7 +7,7 @@ Create your own shell that can read input from standard input, parse the input, 
 It should be able to support the following commands:  ls, cat, tail, head, env, echo, cd, setenv, unsetenv, env, exit, pwd and which.
 
 ## Description
-The standard input was read using `getline()` and essential shell built-ins were implemented. Then `fork()` and `execve()` were used to create child processes for external commands.
+The standard input was read using `getline()` and essential shell built-ins were implemented. Then `fork()` and `execve()` were used to create child processes for external commands. Implmented custom utility functions for tasks such as `quicksort` to sort files by date and time.
 
 Below is the current list of supported commands and flags:
 - ls
