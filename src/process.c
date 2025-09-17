@@ -23,10 +23,7 @@ char** parse_input(char *input) {
 }
 
 int execute_command(char **args, char** envp) {
-    if (args[0] == NULL) {
-        return 1;
-    }
-    if (my_strcmp(args[0], "exit") == 0) {
+    if (args[0] == NULL || my_strcmp(args[0], "exit") == 0) {
         return 1;
     }
     if (my_strcmp(args[0], "cd") == 0) {
