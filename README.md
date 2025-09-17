@@ -25,6 +25,8 @@ Below is the current list of supported commands and flags:
 - which
 - exit
 
+Other system calls are also supported.
+
 ## Installation
 Users can compile the program using the provided Makefile. Once the repository is cloned, navigate to the project directory and run the following command:
 ```
