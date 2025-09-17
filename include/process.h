@@ -2,6 +2,8 @@
 #define PROCESS_H
 
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 // Main functions
 char** parse_input(char *input);

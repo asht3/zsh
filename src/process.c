@@ -1,7 +1,6 @@
 #include "../include/process.h"
 #include "../include/utils.h"
 #include "../include/builtins.h"
-#include "../include/syscalls.h"
 
 char** parse_input(char *input) {
     if (input == NULL) return NULL;
@@ -42,16 +41,7 @@ int execute_command(char **args, char** envp) {
         } else set_environment_variable(args[1], args[2]);
     } else if (my_strcmp(args[0], "env") == 0) {
         print_environment();
-    } else if (my_strcmp(args[0], "ls") == 0) {
-        list_directory(args);
-    } else if (my_strcmp(args[0], "cat") == 0) {
-        concat_files(args);
-    } else if (my_strcmp(args[0], "head") == 0) {
-        display_file_head(args);
-    } else if (my_strcmp(args[0], "tail") == 0) {
-        display_file_tail(args);
-    }
-     else if (my_strcmp(args[0], "exit") == 0) {
+    } else if (my_strcmp(args[0], "exit") == 0) {
         return 1;
     } else if (my_strcmp(args[0], "unsetenv") == 0) {
         if (args[1] == NULL) {

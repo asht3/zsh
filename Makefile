@@ -6,7 +6,6 @@ SRCS = src/main.c \
 	   src/utils.c \
 	   src/process.c \
 	   src/builtins.c \
-	   src/syscalls.c
 
 # Object files will be placed in the obj/ directory
 OBJ_DIR = obj
