@@ -26,7 +26,9 @@ int execute_command(char **args, char** envp) {
     if (args[0] == NULL) {
         return 1;
     }
-
+    if (my_strcmp(args[0], "exit") == 0) {
+        return 1;
+    }
     if (my_strcmp(args[0], "cd") == 0) {
         if (args[1] == NULL) {
             write(STDERR_FILENO, "cd: expected argument\n", 22);
@@ -41,8 +43,6 @@ int execute_command(char **args, char** envp) {
         } else set_environment_variable(args[1], args[2]);
     } else if (my_strcmp(args[0], "env") == 0) {
         print_environment();
-    } else if (my_strcmp(args[0], "exit") == 0) {
-        return 1;
     } else if (my_strcmp(args[0], "unsetenv") == 0) {
         if (args[1] == NULL) {
             write(STDERR_FILENO, "unsetenv: expected argument\n", 26);
