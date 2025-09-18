@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
+extern char *previous_dir;
 #define MAX_INPUT_SIZE 1024
 
 void change_directory(char *path);

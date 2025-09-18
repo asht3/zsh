@@ -1,9 +1,27 @@
 #include "../include/builtins.h"
 #include "../include/utils.h"
 
+char *previous_dir = NULL;
+
 void change_directory(char *path) {
-    if (chdir(path) != 0) {
-        perror("cd failed");
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    
+    if (my_strcmp(path, "-") == 0) {
+        if (previous_dir == NULL) {
+            write(STDERR_FILENO, "cd: no previous directory\n", 26);
+            return;
+        }
+        path = previous_dir;
+    }
+    
+    if (chdir(path) == 0) {
+        // Store current dir as previous
+        if (previous_dir != NULL) free(previous_dir);
+        previous_dir = malloc(my_strlen(cwd) + 1);
+        my_strcpy(previous_dir, cwd);
+    } else {
+        perror("cd");
     }
 }
 
