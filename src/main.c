@@ -11,13 +11,9 @@ int main (int argc, char** argv, char** envp) {
     char* input = NULL;
     size_t input_len = 0;
     ssize_t read_size;
-    // int exit_code = 0; // debug
     while (1) {
         if (isatty(STDIN_FILENO)) {
             write(STDOUT_FILENO, "my_zsh $> ", 10);
-            // if (exit_code) {
-            //     printf("this should not be priting\n");
-            // }
         }
         read_size = getline(&input, &input_len, stdin);
 
@@ -36,9 +32,6 @@ int main (int argc, char** argv, char** envp) {
         // Execute command
         if (execute_command(args, envp) == 1) {
             free(args);
-            // free(input);
-            // exit(0);
-            // exit_code = 1;
             break;
         }
         free(args);

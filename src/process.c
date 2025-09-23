@@ -125,7 +125,6 @@ int start_process(char** args, char** envp) {
         perror("fork failed");
         return 0;
     } else { // Parent process
-        // int result = waitpid(pid, &status, 0);
         waitpid(pid, &status, 0);
         if (WIFSIGNALED(status)) {
             int signal = WTERMSIG(status);
@@ -133,7 +132,6 @@ int start_process(char** args, char** envp) {
                 write(STDERR_FILENO, "Segmentation fault\n", 19);
             }
         }
-        // printf("DEBUG: waitpid returned: %d, child exit status: %d\n", result, status);
     }
 
     return 1;
