@@ -119,11 +119,13 @@ int start_process(char** args, char** envp) {
             write(STDERR_FILENO, "Command not found: ", 19);
             write(STDERR_FILENO, args[0], my_strlen(args[0]));
             write(STDERR_FILENO, "\n", 1);
+            exit(EXIT_FAILURE);
         }
     } else if (pid < 0) {
         perror("fork failed");
         return 0;
     } else { // Parent process
+        // int result = waitpid(pid, &status, 0);
         waitpid(pid, &status, 0);
         if (WIFSIGNALED(status)) {
             int signal = WTERMSIG(status);
@@ -131,6 +133,7 @@ int start_process(char** args, char** envp) {
                 write(STDERR_FILENO, "Segmentation fault\n", 19);
             }
         }
+        // printf("DEBUG: waitpid returned: %d, child exit status: %d\n", result, status);
     }
 
     return 1;
