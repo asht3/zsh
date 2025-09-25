@@ -8,12 +8,15 @@ int main (int argc, char** argv, char** envp) {
         return EXIT_FAILURE;
     }
 
+    print_title();
+
     char* input = NULL;
     size_t input_len = 0;
     ssize_t read_size;
     while (1) {
         if (isatty(STDIN_FILENO)) {
-            write(STDOUT_FILENO, "my_zsh $> ", 10);
+            // write(STDOUT_FILENO, "my_zsh $> ", 10);
+            printf("\033[1;36mmy_zsh $> \033[0m");
         }
         read_size = getline(&input, &input_len, stdin);
 
